@@ -1,5 +1,8 @@
 module Canvas
 import Effects
+import Canvas.State
+import Canvas.JS
+import Canvas.Utils
 
 ||| The representation of a rectangle used internally by a canvas
 data RectRep : Type where
@@ -34,15 +37,6 @@ record Transform : Type where
   MkT : (scaleX, shearX, shearY, scaleY, shiftX, shiftY : Float) ->
         Transform
 
-||| A data type representing canvas state
-record CanvasState : Type where
-  MkC : (transformation : Transform) ->
-        (width, height : Float) ->
-        -- (fillStyle : Fill) ->
-        -- (strokeStyle : Stroke) ->
-        -- (shadowStyle : Shadow) ->
-        CanvasState
-
 mutual
   -- canvas operation types
   CanvasOp : Type -> Type
@@ -51,8 +45,44 @@ mutual
   Draw = CanvasOp ()
 
   data Canvas : Effect where
+    Init : String ->
+           { () ==> CanvasState } Canvas ()
     Dimensions : CanvasOp (Float, Float)
     RectPath : Rect -> Draw
-    FillRect : Rect -> Draw
-    StrokeRect : Rect -> Draw
-    ClearRect : Rect -> Draw
+    Fill : Draw
+    Stroke : Draw
+
+instance Handler Canvas SideEffect where
+  handle () (Init name) k = SE $ do
+    c <- canvasById name
+    case c of
+      Left err => putStr "Couldn't load canvas"
+      Right real => un $ k () real
+  handle st Dimensions k = k (width st, height st) st
+  handle st (RectPath r) k with (rectRep r)
+    | (Rep topleftX topleftY width height) = SE $ do
+      rect (context st) topleftX topleftY width height
+      un $ k () st
+  handle st Fill k = SE $ fill (context st) *> un (k () st)
+  handle st Stroke k = SE $ stroke (context st) *> un (k () st)
+
+WANT_CANVAS : EFFECT
+WANT_CANVAS = MkEff () Canvas
+
+CANVAS : EFFECT
+CANVAS = MkEff CanvasState Canvas
+
+init : String -> { [WANT_CANVAS] ==> [CANVAS] } Eff ()
+init name = call (Init name)
+
+dimensions : { [CANVAS] } Eff (Float, Float)
+dimensions = call Dimensions
+
+rectPath : Rect -> { [CANVAS] } Eff ()
+rectPath r = call (RectPath r)
+
+fill : { [CANVAS] } Eff ()
+fill = call Canvas.Fill
+
+stroke : { [CANVAS] } Eff ()
+stroke = call Stroke
