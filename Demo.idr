@@ -10,7 +10,11 @@ drawDemoStuff : { [WANT_CANVAS] ==> [CANVAS] } Eff ()
 drawDemoStuff = do
   init "democanvas"
   (w, h) <- dimensions
-  rectPath (CornerAndDims 5 5 (w-10) (h-10))
+  beginPath
+  moveTo (0, 0)
+  lineTo (w, h)
+  stroke
+  rectPath (CenterRadius (w/2) (h-30) 40 10)
   fill
 
 namespace Main

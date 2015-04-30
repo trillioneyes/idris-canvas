@@ -42,3 +42,27 @@ stroke : Context -> JS_IO ()
 stroke c = jscall "%0.stroke()"
                   (Ptr -> JS_IO ())
                   (ctx c)
+
+public
+beginPath : Context -> JS_IO ()
+beginPath c = jscall "%0.beginPath()"
+                     (Ptr -> JS_IO ())
+                     (ctx c)
+
+public
+moveTo : Context -> Float -> Float -> JS_IO ()
+moveTo c x y = jscall "%0.moveTo(%1, %2)"
+                      (Ptr -> Float -> Float -> JS_IO ())
+                      (ctx c) x y
+
+public
+lineTo : Context -> Float -> Float -> JS_IO ()
+lineTo c x y = jscall "%0.lineTo(%1, %2)"
+                      (Ptr -> Float -> Float -> JS_IO ())
+                      (ctx c) x y
+
+public
+closePath : Context -> JS_IO ()
+closePath c = jscall "%0.closePath()"
+                     (Ptr -> JS_IO ())
+                     (ctx c)
