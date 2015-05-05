@@ -1,6 +1,7 @@
 ||| Low-level Javascript primitives for accessing a canvas
 module Canvas.JS
 import IdrisScript
+import Canvas.Style
 
 abstract
 record Context : Type where
@@ -66,3 +67,15 @@ closePath : Context -> JS_IO ()
 closePath c = jscall "%0.closePath()"
                      (Ptr -> JS_IO ())
                      (ctx c)
+
+public
+setFill : Context -> ColorStyle -> JS_IO ()
+setFill c s = jscall "%0.fillStyle = %1"
+                     (Ptr -> String -> JS_IO ())
+                     (ctx c) (colorProperty s)
+
+public
+setStroke : Context -> ColorStyle -> JS_IO ()
+setStroke c s = jscall "%0.strokeStyle = %1"
+                       (Ptr -> String -> JS_IO ())
+                       (ctx c) (colorProperty s)

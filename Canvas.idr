@@ -3,6 +3,7 @@ import Effects
 import Canvas.State
 import Canvas.JS
 import Canvas.Utils
+import Canvas.Style
 
 ||| The representation of a rectangle used internally by a canvas
 data RectRep : Type where
@@ -55,6 +56,8 @@ mutual
     ClosePath : Draw
     Fill : Draw
     Stroke : Draw
+    SetFill : ColorStyle -> Draw
+    SetStroke : ColorStyle -> Draw
 
 (>>) : JS_IO () -> SideEffect a -> SideEffect a
 (>>) io se = SE (io *> un se)
@@ -76,6 +79,8 @@ instance Handler Canvas SideEffect where
   handle st (LineTo (x, y)) k = lineTo (context st) x y >> k () st
   handle st (MoveTo (x, y)) k = moveTo (context st) x y >> k () st
   handle st BeginPath k = beginPath (context st) >> k () st
+  handle st (SetStroke c) k = setStroke (context st) c >> k () st
+  handle st (SetFill c) k = setFill (context st) c >> k () st
 
 WANT_CANVAS : EFFECT
 WANT_CANVAS = MkEff () Canvas
@@ -109,3 +114,9 @@ moveTo pt = call (MoveTo pt)
 
 beginPath : { [CANVAS] } Eff ()
 beginPath = call BeginPath
+
+setFill : ColorStyle -> { [CANVAS] } Eff ()
+setFill c = call (SetFill c)
+
+setStroke : ColorStyle -> { [CANVAS] } Eff ()
+setStroke c = call (SetStroke c)
