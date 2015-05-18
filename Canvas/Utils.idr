@@ -1,8 +1,9 @@
 ||| Instances for SideEffect
 module Utils
 
-record SideEffect' : FFI -> Type -> Type where
-  SE' : (un : IO' ffi ()) -> SideEffect' ffi a
+record SideEffect' (ffi : FFI) (a : Type) where
+  constructor SE'
+  un : IO' ffi ()
 
 SideEffect : Type -> Type
 SideEffect = SideEffect' FFI_JS

@@ -1,5 +1,4 @@
 module Demo
-import IdrisScript
 import Effects
 import Canvas
 import Canvas.JS

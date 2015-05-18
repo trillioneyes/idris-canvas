@@ -1,11 +1,17 @@
 ||| Low-level Javascript primitives for accessing a canvas
 module Canvas.JS
-import IdrisScript
 import Canvas.Style
 
+%inline
+public
+jscall : String -> (ty : Type) -> {auto fty : FTy FFI_JS [] ty} -> ty
+jscall name ty = foreign FFI_JS name ty
+
 abstract
-record Context : Type where
-  CO : (can : Ptr) -> (ctx : Ptr) -> Context
+record Context where
+  constructor CO
+  can : Ptr
+  ctx : Ptr
 
 public
 data CanvasLoadingError = NotACanvas

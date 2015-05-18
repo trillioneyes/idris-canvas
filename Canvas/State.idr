@@ -1,5 +1,4 @@
 module State
-import IdrisScript
 import Canvas.JS
 
 data PathPrim : Type where
@@ -10,15 +9,16 @@ Path : Type
 Path = List PathPrim
 
 ||| A data type representing canvas state
-record CanvasState : Type where
-  MkC : (context : Context) ->
-        (path : Path) ->
-        -- (transformation : Transform) ->
-        (width, height : Float) ->
-        -- (fillStyle : Fill) ->
-        -- (strokeStyle : Stroke) ->
-        -- (shadowStyle : Shadow) ->
-        CanvasState
+record CanvasState where
+  constructor MkC
+  context : Context
+  path : Path
+  -- transformation : Transform
+  width : Float
+  height : Float
+  -- fillStyle : Fill
+  -- strokeStyle : Stroke
+  -- shadowStyle : Shadow
 
 canvasById : String -> JS_IO (Either CanvasLoadingError CanvasState)
 canvasById name = do

@@ -50,10 +50,10 @@ data ColorStyle = Solid Color -- | Grad Gradient | Pat Pattern
 colorProperty : ColorStyle -> String
 colorProperty (Solid c) = toCSS c
 
-record Style : Type where
-  S : (fill : ColorStyle) ->
-      (stroke : ColorStyle) ->
-      -- (text : TextStyle) ->
-      -- (line : LineStyle) ->
-      -- (shadow : ShadowStyle) ->
-      Style
+record Style where
+  constructor S
+  fill : ColorStyle
+  stroke : ColorStyle
+  -- text : TextStyle
+  -- line : LineStyle
+  -- shadow : ShadowStyle

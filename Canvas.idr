@@ -34,9 +34,14 @@ rectRep (CenterLength x y width height) = Rep tlX tlY width height where
   tlY = y - (height / 2)
 
 ||| A data type representing the 2D transformation matrix used by the canvas
-record Transform : Type where
-  MkT : (scaleX, shearX, shearY, scaleY, shiftX, shiftY : Float) ->
-        Transform
+record Transform where
+  constructor MkT
+  scaleX : Float
+  shearX : Float
+  shearY : Float
+  scaleY : Float
+  shiftX : Float
+  shiftY : Float
 
 mutual
   -- canvas operation types
