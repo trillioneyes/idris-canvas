@@ -14,7 +14,7 @@ drawDemoStuff = do
   beginPath
   moveTo (0, 0)
   lineTo (w, h)
-  setStroke (Solid (Named "ALICEBLUE"))
+  setStroke (Solid (Named "BROWN"))
   stroke
   beginPath
   moveTo (w, 0)

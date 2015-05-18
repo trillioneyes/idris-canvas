@@ -1,0 +1,13 @@
+package idriscanvas
+
+opts = "-p effects --codegen javascript"
+
+main = Demo
+
+executable = main.js
+
+modules = Canvas
+        , Canvas.State
+        , Canvas.JS
+        , Canvas.Utils
+        , Canvas.Style
