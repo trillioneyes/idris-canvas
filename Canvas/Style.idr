@@ -1,11 +1,61 @@
 module Canvas.Style
 import Data.List
 
+%language TypeProviders
+
 namespace Rep
   data ColorRep = RGBA Nat Nat Nat Float
 
+hexDigit : Char -> Maybe Nat
+hexDigit c =
+  if c >= '0' && c <= '9'
+    then Just (toNat $ ord c - ord '0')
+    else if c >= 'a' && c <= 'f'
+            then Just $ toNat $ 10 + ord c - ord 'a'
+            else if c >= 'A' && c <= 'F'
+                    then Just $ toNat $ 10 + ord c - ord 'A'
+                    else Nothing
+
+hex : Char -> Char -> Maybe Nat
+hex x y = [| (map (*16) (hexDigit x)) + hexDigit y |]
+
+parseVal : List Char -> Maybe ColorRep
+parseVal [',', '#', r1, r2, g1, g2, b1, b2] =
+  [| RGBA (hex r1 r2) (hex g1 g2) (hex b1 b2) (pure 1) |]
+parseVal _ = Nothing
+
+parseColor : List Char -> Maybe (String, ColorRep)
+parseColor line with (break (==',') line)
+  | (name, val) = map (\rep => (pack name, rep)) (parseVal val)
+
+parseColors : String -> Maybe (List (String, ColorRep))
+parseColors = traverse parseColor . lines' . unpack
+
+readColors : String -> IO (Provider (List (String, ColorRep)))
+readColors path =
+  map (maybe (Error "malformed colors.csv") Provide . parseColors) (readFile path)
+
+%provide (rawColors : List (String, ColorRep)) with (readColors "Canvas/colors.csv")
+
 CSSColors : List String
-CSSColors = ["blue"]
+CSSColors = map fst rawColors
+
+elemMap : Elem x xs -> Elem (f x) (map f xs)
+elemMap Here = Here
+elemMap (There x) = There (elemMap x)
+
+mapElem : Elem a (map f xs) -> (x ** Elem x xs)
+mapElem {xs = []} prf = absurd prf
+mapElem {xs = (y :: xs)} Here = MkSigma y Here
+mapElem {xs = (y :: xs)} (There prf) with (mapElem prf)
+  mapElem {xs = (y :: xs)} (There prf) | (MkSigma x pf) = (x ** There pf)
+
+CSSRaw : Elem name CSSColors -> ColorRep
+CSSRaw prf with (mapElem {f=fst} {xs=rawColors} prf)
+  | ((n, v) ** prf') = v
+
+nameColor : (name : String) -> Elem name CSSColors -> ColorRep
+nameColor name prf = CSSRaw prf
 
 data Color : Type where
   RGB : Nat -> Nat -> Nat -> Color
@@ -28,9 +78,7 @@ rep (RGB r g b) = RGBA r g b 255
 rep (RGBA r g b a) = RGBA r g b a
 --rep (HSL h s l) = ?hslToRGBA
 --rep (HSLA h s l a) = ?hslaToRGBA
-rep (Named {prf = Here} "blue") = RGBA 0 0 255 1
-rep (Named {prf = (There x)} name) = absurd x
---rep (Named "blue") = RGBA 0 0 255 1
+rep (Named n {prf}) = nameColor n prf
 
 str : List String -> String
 str xs = foldr (++) "" xs
