@@ -61,6 +61,7 @@ mutual
     BeginPath : Draw
     MoveTo : (Double, Double) -> Draw
     LineTo : (Double, Double) -> Draw
+    QuadraticTo : (Double, Double) -> (Double, Double) -> Draw
     ClosePath : Draw
     Fill : Draw
     Stroke : Draw
@@ -86,6 +87,8 @@ Handler Canvas SideEffect where
   handle st Stroke k = stroke (context st) >>  k () st
   handle st ClosePath k = closePath (context st) >> k () st
   handle st (LineTo (x, y)) k = lineTo (context st) x y >> k () st
+  handle st (QuadraticTo (cx, cy) (x, y)) k =
+         quadraticTo (context st) cx cy x y >> k () st
   handle st (MoveTo (x, y)) k = moveTo (context st) x y >> k () st
   handle st BeginPath k = beginPath (context st) >> k () st
   handle st (SetStroke c) k = setStroke (context st) c >> k () st
@@ -130,6 +133,10 @@ closePath = call ClosePath
 export
 lineTo : (Double, Double) -> { [CANVAS] } Eff ()
 lineTo pt = call (LineTo pt)
+
+export
+quadraticTo : (Double, Double) -> (Double, Double) -> { [CANVAS] } Eff ()
+quadraticTo control pt = call (QuadraticTo control pt)
 
 export
 moveTo : (Double, Double) -> { [CANVAS] } Eff ()

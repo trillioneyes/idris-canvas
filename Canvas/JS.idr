@@ -5,7 +5,7 @@ import Canvas.Style
 %inline
 export
 jscall : String -> (ty : Type) -> {auto fty : FTy FFI_JS [] ty} -> ty
-jscall name ty = foreign FFI_JS name ty
+jscall code ty = foreign FFI_JS code ty
 
 export
 record Context where
@@ -67,6 +67,13 @@ lineTo : Context -> Double -> Double -> JS_IO ()
 lineTo c x y = jscall "%0.lineTo(%1, %2)"
                       (Ptr -> Double -> Double -> JS_IO ())
                       (ctx c) x y
+
+export
+quadraticTo : Context -> Double -> Double -> Double -> Double -> JS_IO ()
+quadraticTo c cx cy x y =
+  jscall "%0.quadraticCurveTo(%1, %2, %3, %4)"
+         (Ptr -> Double -> Double -> Double -> Double -> JS_IO ())
+         (ctx c) cx cy x y
 
 export
 closePath : Context -> JS_IO ()
