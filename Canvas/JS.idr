@@ -3,7 +3,7 @@ module Canvas.JS
 import Canvas.Style
 
 %inline
-public export
+export
 jscall : String -> (ty : Type) -> {auto fty : FTy FFI_JS [] ty} -> ty
 jscall name ty = foreign FFI_JS name ty
 
@@ -16,7 +16,7 @@ record Context where
 public export
 data CanvasLoadingError = NotACanvas
 
-public export
+export
 canvas : Ptr -> JS_IO (Either CanvasLoadingError Context)
 canvas p = do
   conName <- jscall "%0.constructor.name" (Ptr -> JS_IO String) p
