@@ -7,7 +7,7 @@ import Canvas.Utils
 import Canvas.Style
 import Data.List
 
-drawDemoStuff : { [WANT_CANVAS] ==> [CANVAS] } Eff ()
+drawDemoStuff : { [WANT_CANVAS] ==> [CANVAS] } (Eff ())
 drawDemoStuff = do
   init "democanvas"
   (w, h) <- dimensions
@@ -27,4 +27,4 @@ drawDemoStuff = do
 
 namespace Main
   main : JS_IO ()
-  main = un $ run drawDemoStuff
+  main = un $ runEnv WantCanvas drawDemoStuff

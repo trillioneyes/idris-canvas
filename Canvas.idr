@@ -7,23 +7,24 @@ import Canvas.Style
 
 ||| The representation of a rectangle used internally by a canvas
 data RectRep : Type where
-  Rep : (topleftX : Float) -> (topleftY : Float) -> (width : Float) -> (height : Float)
+  Rep : (topleftX : Double) -> (topleftY : Double) -> (width : Double) -> (height : Double)
         -> RectRep
 
 ||| A specification of a rectangle
+public export
 data Rect : Type where
   ||| Specify a rectangle by giving one of its corners and offsets for the other
   ||| corner.
-  CornerAndDims : (x, y, width, height : Float) -> Rect
+  CornerAndDims : (x, y, width, height : Double) -> Rect
   ||| Specify a rectangle by giving horizontal and vertical bounding regions, or
   ||| equivalently, by giving both corners.
-  Bounds : (x1, x2, y1, y2 : Float) -> Rect
+  Bounds : (x1, x2, y1, y2 : Double) -> Rect
   ||| Specify a rectangle by giving the coordinates of its center, and then a radius
   ||| (i.e. half the length) for each axis.
-  CenterRadius : (x, y, rx, ry : Float) -> Rect
+  CenterRadius : (x, y, rx, ry : Double) -> Rect
   ||| Specify a rectangle by giving the coordinates of its center and the length of
   ||| each axis.
-  CenterLength : (x, y, width, height : Float) -> Rect
+  CenterLength : (x, y, width, height : Double) -> Rect
 
 rectRep : Rect -> RectRep
 rectRep (CornerAndDims x y width height) = Rep x y width height
@@ -36,28 +37,30 @@ rectRep (CenterLength x y width height) = Rep tlX tlY width height where
 ||| A data type representing the 2D transformation matrix used by the canvas
 record Transform where
   constructor MkT
-  scaleX : Float
-  shearX : Float
-  shearY : Float
-  scaleY : Float
-  shiftX : Float
-  shiftY : Float
+  scaleX : Double
+  shearX : Double
+  shearY : Double
+  scaleY : Double
+  shiftX : Double
+  shiftY : Double
 
 mutual
   -- canvas operation types
+  export
   CanvasOp : Type -> Type
   CanvasOp result = { CanvasState } Canvas result
   Draw : Type
   Draw = CanvasOp ()
 
+  export
   data Canvas : Effect where
     Init : String ->
            { () ==> CanvasState } Canvas ()
-    Dimensions : CanvasOp (Float, Float)
+    Dimensions : CanvasOp (Double, Double)
     RectPath : Rect -> Draw
     BeginPath : Draw
-    MoveTo : (Float, Float) -> Draw
-    LineTo : (Float, Float) -> Draw
+    MoveTo : (Double, Double) -> Draw
+    LineTo : (Double, Double) -> Draw
     ClosePath : Draw
     Fill : Draw
     Stroke : Draw
@@ -67,11 +70,12 @@ mutual
 (>>) : JS_IO () -> SideEffect a -> SideEffect a
 (>>) io se = SE (io *> un se)
 
-instance Handler Canvas SideEffect where
+export
+Handler Canvas SideEffect where
   handle () (Init name) k = SE $ do
     c <- canvasById name
     case c of
-      Left err => putStr "Couldn't load canvas"
+      Left err => pure ()
       Right real => un $ k () real
   handle st Dimensions k = k (width st, height st) st
   handle st (RectPath r) k with (rectRep r)
@@ -87,41 +91,58 @@ instance Handler Canvas SideEffect where
   handle st (SetStroke c) k = setStroke (context st) c >> k () st
   handle st (SetFill c) k = setFill (context st) c >> k () st
 
+export
 WANT_CANVAS : EFFECT
 WANT_CANVAS = MkEff () Canvas
 
+export
+WantCanvas : Handler Canvas m => Env m [WANT_CANVAS]
+WantCanvas = [()]
+
+export
 CANVAS : EFFECT
 CANVAS = MkEff CanvasState Canvas
 
+export
 init : String -> { [WANT_CANVAS] ==> [CANVAS] } Eff ()
 init name = call (Init name)
 
-dimensions : { [CANVAS] } Eff (Float, Float)
+export
+dimensions : { [CANVAS] } Eff (Double, Double)
 dimensions = call Dimensions
 
+export
 rectPath : Rect -> { [CANVAS] } Eff ()
 rectPath r = call (RectPath r)
 
+export
 fill : { [CANVAS] } Eff ()
 fill = call Canvas.Fill
 
+export
 stroke : { [CANVAS] } Eff ()
 stroke = call Stroke
 
+export
 closePath : { [CANVAS] } Eff ()
 closePath = call ClosePath
 
-lineTo : (Float, Float) -> { [CANVAS] } Eff ()
+export
+lineTo : (Double, Double) -> { [CANVAS] } Eff ()
 lineTo pt = call (LineTo pt)
 
-moveTo : (Float, Float) -> { [CANVAS] } Eff ()
+export
+moveTo : (Double, Double) -> { [CANVAS] } Eff ()
 moveTo pt = call (MoveTo pt)
 
+export
 beginPath : { [CANVAS] } Eff ()
 beginPath = call BeginPath
 
+export
 setFill : ColorStyle -> { [CANVAS] } Eff ()
 setFill c = call (SetFill c)
 
+export
 setStroke : ColorStyle -> { [CANVAS] } Eff ()
 setStroke c = call (SetStroke c)

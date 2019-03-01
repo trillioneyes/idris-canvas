@@ -4,7 +4,8 @@ import Data.List
 %language TypeProviders
 
 namespace Rep
-  data ColorRep = RGBA Nat Nat Nat Float
+  export
+  data ColorRep = RGBA Nat Nat Nat Double
 
 hexDigit : Char -> Maybe Nat
 hexDigit c =
@@ -32,13 +33,19 @@ parseColors : String -> Maybe (List (String, ColorRep))
 parseColors = traverse parseColor . lines' . unpack
 
 readColors : String -> IO (Provider (List (String, ColorRep)))
-readColors path =
-  map (maybe (Error "malformed colors.csv") Provide . parseColors) (readFile path)
+readColors path = do
+  Right csvData <- readFile path
+        | Left fileError => pure (Error (show fileError))
+  Just colorReps <- pure $ parseColors csvData
+       | Nothing => pure (Error "malformed colors.csv")
+  pure (Provide colorReps)
+  -- map (maybe (Error "malformed colors.csv") Provide . parseColors) (readFile path)
 
 %provide (rawColors : List (String, ColorRep)) with (readColors "Canvas/colors.csv")
 
+public export
 CSSColors : List String
-CSSColors = map fst rawColors
+CSSColors = [colorName | (colorName, _) <- rawColors]
 
 elemMap : Elem x xs -> Elem (f x) (map f xs)
 elemMap Here = Here
@@ -46,22 +53,23 @@ elemMap (There x) = There (elemMap x)
 
 mapElem : Elem a (map f xs) -> (x ** Elem x xs)
 mapElem {xs = []} prf = absurd prf
-mapElem {xs = (y :: xs)} Here = MkSigma y Here
+mapElem {xs = (y :: xs)} Here = MkDPair y Here
 mapElem {xs = (y :: xs)} (There prf) with (mapElem prf)
-  mapElem {xs = (y :: xs)} (There prf) | (MkSigma x pf) = (x ** There pf)
+  mapElem {xs = (y :: xs)} (There prf) | (MkDPair x pf) = (x ** There pf)
 
-CSSRaw : Elem name CSSColors -> ColorRep
+CSSRaw : {name : String} -> Elem name CSSColors -> ColorRep
 CSSRaw prf with (mapElem {f=fst} {xs=rawColors} prf)
   | ((n, v) ** prf') = v
 
 nameColor : (name : String) -> Elem name CSSColors -> ColorRep
 nameColor name prf = CSSRaw prf
 
+public export
 data Color : Type where
   RGB : Nat -> Nat -> Nat -> Color
-  RGBA : Nat -> Nat -> Nat -> Float -> Color
+  RGBA : Nat -> Nat -> Nat -> Double -> Color
   --HSL : Nat -> Nat -> Nat -> Color
-  --HSLA : Nat -> Nat -> Nat -> Float -> Color
+  --HSLA : Nat -> Nat -> Nat -> Double -> Color
   Named : (name : String) -> {auto prf : Elem name CSSColors} -> Color
 
 -- hslToRGB : (Nat, Nat, Nat) -> (Nat, Nat, Nat)
@@ -93,11 +101,14 @@ toCSS (RGBA r g b a) = call "rgba" [show r, show g, show b, show a]
 -- toCSS (HSLA h s l a) = call "hsla" [show h, show s ++ "%", show l ++ "%", show a]
 toCSS (Named name) = name
 
+public export
 data ColorStyle = Solid Color -- | Grad Gradient | Pat Pattern
 
+export
 colorProperty : ColorStyle -> String
 colorProperty (Solid c) = toCSS c
 
+public export
 record Style where
   constructor S
   fill : ColorStyle
