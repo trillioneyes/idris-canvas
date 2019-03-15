@@ -34,6 +34,11 @@ rectRep (CenterLength x y width height) = Rep tlX tlY width height where
   tlX = x - (width / 2)
   tlY = y - (height / 2)
 
+export
+rectCenter : Rect -> (Double, Double)
+rectCenter rect = case rectRep rect of
+  Rep tlX tlY w h => (tlX + w/2, tlY + h/2)
+
 ||| A data type representing the 2D transformation matrix used by the canvas
 record Transform where
   constructor MkT
@@ -64,6 +69,7 @@ mutual
     QuadraticTo : (Double, Double) -> (Double, Double) -> Draw
     ClosePath : Draw
     Fill : Draw
+    FillText : String -> (Double, Double) -> Draw
     Stroke : Draw
     SetFill : ColorStyle -> Draw
     SetStroke : ColorStyle -> Draw
@@ -84,6 +90,7 @@ Handler Canvas SideEffect where
       rect (context st) topleftX topleftY width height
       un $ k () st
   handle st Fill k = fill (context st) >> k () st
+  handle st (FillText text (x, y)) k = fillText (context st) text x y >> k () st
   handle st Stroke k = stroke (context st) >>  k () st
   handle st ClosePath k = closePath (context st) >> k () st
   handle st (LineTo (x, y)) k = lineTo (context st) x y >> k () st
@@ -121,6 +128,10 @@ rectPath r = call (RectPath r)
 export
 fill : { [CANVAS] } Eff ()
 fill = call Canvas.Fill
+
+export
+fillText : String -> (Double, Double) -> { [CANVAS] } Eff ()
+fillText text (x, y) = call (FillText text (x, y))
 
 export
 stroke : { [CANVAS] } Eff ()

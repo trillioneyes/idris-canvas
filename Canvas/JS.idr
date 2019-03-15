@@ -45,6 +45,12 @@ fill c = jscall "%0.fill()"
                 (ctx c)
 
 export
+fillText : Context -> String -> Double -> Double -> JS_IO ()
+fillText c text x y = jscall "%0.fillText(%1, %2, %3)"
+                             (Ptr -> String -> Double -> Double -> JS_IO ())
+                             (ctx c) text x y
+
+export
 stroke : Context -> JS_IO ()
 stroke c = jscall "%0.stroke()"
                   (Ptr -> JS_IO ())
